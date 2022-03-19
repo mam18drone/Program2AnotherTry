@@ -8,41 +8,33 @@
 using std::string;
 using namespace std;
 
-enum Priority { ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN };
-
 struct Item {
-	int priority;
+	double priority;
 	double weight;
 	int check;
 };
 
 struct List {
-	vector<Item> items;
+	vector<Item> cargo;
 };
 
-bool initializeItemList(List& listItems) {
+void initializeItemList(List& listItems) {
 	ifstream inFile;
 	inFile.open("Program2Input.txt");
-	/*
+	
 	if (!inFile) {
 		cerr << "Unable to open input file" << endl;
-		return false;
 	}
-	*/
-	int priorityFile;
+	
+	double priorityFile;
 	double weightFile;
-	int checkFile;
-	Item item;
-
-	//int column1, column2;
-	/*
-	while (inFile >> priorityFile >> weightFile >> checkFile)
+	while (inFile >> priorityFile >> weightFile)
 	{
+		Item item;
 		item.priority = priorityFile;
 		item.weight = weightFile;
-		item.check = checkFile;
-		listItems.items.push_back(item);
+		item.check = 0;
+		//cout << item.priority << "\t" << item.weight << "\t" << item.check << endl;
+		listItems.cargo.push_back(item);
 	}
-	return true;
-	*/
 }

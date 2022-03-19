@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <cmath>
+#include "CargoItems.h"
 
 using namespace std;
 
@@ -14,20 +15,36 @@ double function(double currWeight)
 
 }
 
-double grabItemIndex(List& itemList)
+int randIndex(List& listItems)
 {
-	Item indexItem;
 	srand(time(0));
-	size_t randomIndex = rand() % itemList.items.size();
-	indexItem = itemList.items[randomIndex];
-	if (indexItem.check = 1)
-		return grabItemIndex(itemList);
-	else
-	{
-		itemList.items[randomIndex].check = 1;
+	int randomIndex = rand() % listItems.cargo.size();
+	return randomIndex;
+}
 
+bool indexCheck(List& listItems, int index)
+{
+	Item indexItem = listItems.cargo[index];
+	if (indexItem.check == 0)
+	{
+		listItems.cargo[index].check == 1;
+		return true;
 	}
-	return indexItem.weight;
+	else
+		return false;
+}
+
+void shuffle(List& listItems)
+{
+	List copy;
+	while (!listItems.cargo.empty())
+	{
+		srand(time(0));
+		size_t randomIndex = rand() % listItems.cargo.size();
+		copy.cargo.push_back(listItems.cargo[randomIndex]);
+		listItems.cargo.erase(listItems.cargo.begin() + randomIndex);
+	}
+	listItems = copy;
 }
 
 int simulatedAnnealing(double maxWeight, double initialT, double minimumT, double alpha, List& itemList) {
@@ -44,7 +61,7 @@ int simulatedAnnealing(double maxWeight, double initialT, double minimumT, doubl
 			{
 				//double xNew = currWeight + ((rand() / (double)RAND_MAX) * 2 - 1);
 				//double LNew = function(xNew);
-				double newWeight = currWeight + itemList.items[grabItemIndex(itemList)].weight;
+				double newWeight = currWeight + itemList.cargo[grabItemIndex(itemList)].weight;
 				double valNew = function(newWeight);
 
 				if (valNew < val || (rand() / (double)RAND_MAX) <= pow(3, -(valNew - val) / currT))
@@ -59,4 +76,22 @@ int simulatedAnnealing(double maxWeight, double initialT, double minimumT, doubl
 	cout << "Final state = " << currWeight << "\t, total of F(x) = " << function(currWeight) << "\n\n";
 
 	return currWeight;
+}
+
+
+
+double grabItemIndex(List& itemList)
+{
+	Item indexItem;
+	srand(time(0));
+	size_t randomIndex = rand() % itemList.cargo.size();
+	indexItem = itemList.cargo[randomIndex];
+	if (indexItem.check = 1)
+		return grabItemIndex(itemList);
+	else
+	{
+		itemList.cargo[randomIndex].check = 1;
+
+	}
+	return indexItem.weight;
 }
