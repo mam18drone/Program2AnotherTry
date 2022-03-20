@@ -11,102 +11,149 @@
 
 using namespace std;
 
-
-void weightChoice(double currWeight, double currUtility)
-{
-
-}
-
+/* Calculate the weight of items in Cargo*/
 double weightCalc(List list)
 {
 	double weight = 0;
 	for (int i = 0; i < list.cargo.size(); i++)
 	{
-		weight = weight + list.cargo[i].weight;
+		if (list.cargo[i].check == 1)
+			weight = weight + list.cargo[i].weight;
 	}
 	return weight;
 }
 
-int weightCompare(List temp, List listItems)
+/*Compare weight in Cargo*/
+int weightCompare(List temp1, List temp2)
 {
-	double w1 = weightCalc(temp);
-	double w2 = weightCalc(listItems);
+	double w1 = weightCalc(temp1);
+	double w2 = weightCalc(temp2);
 	if (w1 > w2)
 		return 1;
 	else
 		return 2;
 }
 
-double utilityCalc(List list)
+/* Caculate Utility of the Cargo*/
+double utilityCalc(List list, double maxWeight)
 {
-	double utility;
+	double utility = 0;
+	double newWeight;
 	for (int i = 0; i < list.cargo.size(); i++)
 	{
-		utility = utility + list.cargo[i].priority;
+		if(list.cargo[i].check == 1)
+			utility = utility + list.cargo[i].utility;
+	}
+	newWeight = weightCalc(list);
+	if (newWeight > maxWeight)
+	{
+		utility = utility + ((newWeight - maxWeight) * (-20));
 	}
 	return utility;
 }
 
-
-
-void comparison(List& listItems)
+/*Compare two Cargo load Utililties */
+double utilityCompare(List temp1, List temp2, double maxWeight)
 {
-	randIndex(listItems);
-	
-
-}
-
-double keyFunction(double deltE, double currT)
-{
-	double probability = exp(-deltE / currT);
-	return probability;
-}
-
-bool insertCheck(List& listItems, List& inCargo, double currWeight, double currUtility, double maxWeight, int index)
-{
-	if (indexCheck(listItems, index))
-	{
-		if (currWeight < maxWeight)
-		{
-			currWeight = currWeight + listItems.cargo[index].weight;
-			currUtility = currUtility + listItems.cargo[index].priority;
-			if (currWeight < maxWeight)
-			{
-				inCargo.cargo.push_back(listItems.cargo[index]);
-				listItems.cargo[index].check == 1;
-				return true;
-			}
-			// insert else statement for weighting?
-			else
-				return false;
-		}
-		else
-			return false;
-	}
+	double u1 = utilityCalc(temp1, maxWeight);
+	double u2 = utilityCalc(temp2, maxWeight);
+	if (u1 > u2)
+		return 1;
 	else
-		return false;
+		return 2;
 }
 
-void simulatedAnnealing(List& listItems, List& inCargo, double& currWeight, double& currUtility, double minTemp, double maxTemp, double maxWeight, double geoDec, int maxAttempts, double targetUtility)
+/* Flips bit for if item is in or out of Cargo*/
+int flipBit(List& listItems, int index)
+{
+	/* Puts item in */
+	if (listItems.cargo[index].check == 0) // out
+		return listItems.cargo[index].check = 1; // in
+		
+	/* Takes item out */
+	else 
+		return listItems.cargo[index].check = 0; // out
+}
+
+/* Cost Check Bench Mark */
+double benchMark(double targetUtility, double actualUtility)
+{
+	double distanceUtility = targetUtility - actualUtility;
+	return distanceUtility;
+}
+
+/* Simualted Annealing Function*/
+void simulatedAnnealing(List& listItems, double minTemp, double maxTemp, double maxWeight, double geoDec, int maxAttempts, double targetUtility)
 {
 	int index;
 	int attempt;
 	int acceptedChanges;
-
+	double weightProposed;
+	double utilityProposed;
+	double weightPrevious;
+	double utilityPrevious;
+	double e = 2.71828;
+	/* start of simulated annealing */
 	for (double currT = maxTemp; currT > minTemp; currT *= geoDec)
 	{
-		attempt = 0;
 		acceptedChanges = 0;
-		while (attempt < maxAttempts)
+		/* cycle of attempts to make changes in cargo */
+		for (int i = 0; i < maxAttempts; i++)
 		{
+			weightPrevious = weightCalc(listItems);
+			utilityPrevious = utilityCalc(listItems,maxWeight);
 			index = randIndex(listItems);
-			if (insertCheck(listItems, inCargo, currWeight, currUtility, maxWeight, index))
+			flipBit(listItems, index);
+			weightProposed = weightCalc(listItems);
+			utilityProposed = utilityCalc(listItems, maxWeight);
+			if (benchMark(targetUtility, utilityProposed) < benchMark(targetUtility, utilityPrevious) || double(rand()) <= pow(e, -(utilityProposed - utilityPrevious) / currT))
+			{
+				/* Change was made */
 				acceptedChanges++;
+			}
 			else
-				if (comparison())
-					acceptedChanges++;
-			attempt++;
+			{
+				/* Change was not made */
+				flipBit(listItems, index);
+			}
+				
 		}
+		cout << weightCalc(listItems) << "\t" << utilityCalc(listItems, maxWeight) << endl;
+		/* if no changes made in full cycle, break from loop */
+		if (acceptedChanges == 0)
+			break;
 	}
-	cout << currWeight << "\t" << currUtility << endl;
+}
+
+/* csv logger of items used for final configuration*/
+void csvlogger(List listItems)
+{
+	auto now = chrono::system_clock::now();
+	auto UTC = chrono::duration_cast<chrono::seconds>(now.time_since_epoch()).count();
+	ofstream loggerfile("SimulatedAnneal_Log_" + to_string(UTC) + ".csv");
+	loggerfile << "Item Num" << "," << "Utility" << "," << "Weight" << "\n";
+	for (int i = 0; i < listItems.cargo.size(); i++)
+	{
+		if (listItems.cargo[i].check == 1)
+			loggerfile << i + 1 << "," << listItems.cargo[i].utility << "," << listItems.cargo[i].weight << "\n";
+	}
+	loggerfile.close();
+}
+
+/* text logger of overall performance of final configuration */
+void txtlogger(List listItems, double maxWeight)
+{
+	auto now = chrono::system_clock::now();
+	auto UTC = chrono::duration_cast<chrono::seconds>(now.time_since_epoch()).count();
+	ofstream txtfile("SimulatedAnneal_Summary_" + to_string(UTC) + ".txt");
+
+	txtfile << "For the simulated annealing configuration the following results appear: \n";
+	for (int i = 0; i < listItems.cargo.size(); i++)
+	{
+		if (listItems.cargo[i].check == 1)
+			txtfile << "\t - The total number of items in cargo is: " << listItems.cargo.size() << "\n";
+	}
+	txtfile << "\t - The total weight of cargo is: " << weightCalc(listItems) << "\n";
+	txtfile << "\t - The total utility of cargo is: " << utilityCalc(listItems, maxWeight) << "\n";
+	txtfile.close();
 }
