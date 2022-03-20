@@ -1,97 +1,112 @@
 #pragma once
 
 #include <iostream>
-#include <time.h>
+#include <ctime>
 #include <stdlib.h>
 #include <cmath>
+#include <vector>
 #include "CargoItems.h"
+#include "AnnealingFunctions.h"
+#include <math.h>
 
 using namespace std;
 
-double function(double currWeight)
+
+void weightChoice(double currWeight, double currUtility)
 {
-	//return x = pow(x, 4) + (4 / 3) * pow(x, 3) - 4 * pow(x, 2) + 5;
-	return currWeight = ;
 
 }
 
-int randIndex(List& listItems)
+double weightCalc(List list)
 {
-	srand(time(0));
-	int randomIndex = rand() % listItems.cargo.size();
-	return randomIndex;
-}
-
-bool indexCheck(List& listItems, int index)
-{
-	Item indexItem = listItems.cargo[index];
-	if (indexItem.check == 0)
+	double weight = 0;
+	for (int i = 0; i < list.cargo.size(); i++)
 	{
-		listItems.cargo[index].check == 1;
-		return true;
+		weight = weight + list.cargo[i].weight;
+	}
+	return weight;
+}
+
+int weightCompare(List temp, List listItems)
+{
+	double w1 = weightCalc(temp);
+	double w2 = weightCalc(listItems);
+	if (w1 > w2)
+		return 1;
+	else
+		return 2;
+}
+
+double utilityCalc(List list)
+{
+	double utility;
+	for (int i = 0; i < list.cargo.size(); i++)
+	{
+		utility = utility + list.cargo[i].priority;
+	}
+	return utility;
+}
+
+
+
+void comparison(List& listItems)
+{
+	randIndex(listItems);
+	
+
+}
+
+double keyFunction(double deltE, double currT)
+{
+	double probability = exp(-deltE / currT);
+	return probability;
+}
+
+bool insertCheck(List& listItems, List& inCargo, double currWeight, double currUtility, double maxWeight, int index)
+{
+	if (indexCheck(listItems, index))
+	{
+		if (currWeight < maxWeight)
+		{
+			currWeight = currWeight + listItems.cargo[index].weight;
+			currUtility = currUtility + listItems.cargo[index].priority;
+			if (currWeight < maxWeight)
+			{
+				inCargo.cargo.push_back(listItems.cargo[index]);
+				listItems.cargo[index].check == 1;
+				return true;
+			}
+			// insert else statement for weighting?
+			else
+				return false;
+		}
+		else
+			return false;
 	}
 	else
 		return false;
 }
 
-void shuffle(List& listItems)
+void simulatedAnnealing(List& listItems, List& inCargo, double& currWeight, double& currUtility, double minTemp, double maxTemp, double maxWeight, double geoDec, int maxAttempts, double targetUtility)
 {
-	List copy;
-	while (!listItems.cargo.empty())
+	int index;
+	int attempt;
+	int acceptedChanges;
+
+	for (double currT = maxTemp; currT > minTemp; currT *= geoDec)
 	{
-		srand(time(0));
-		size_t randomIndex = rand() % listItems.cargo.size();
-		copy.cargo.push_back(listItems.cargo[randomIndex]);
-		listItems.cargo.erase(listItems.cargo.begin() + randomIndex);
-	}
-	listItems = copy;
-}
-
-int simulatedAnnealing(double maxWeight, double initialT, double minimumT, double alpha, List& itemList) {
-
-	double currWeight = 0; // setting of initial weight
-	//double L = function(currWeight);
-	double val = function(currWeight);
-
-	while (maxWeight > currWeight)
-	{
-		for (double currT = initialT; currT > minimumT; currT *= alpha) // cooling schedule
+		attempt = 0;
+		acceptedChanges = 0;
+		while (attempt < maxAttempts)
 		{
-			for (int i = 0; i < 200; i++) // 
-			{
-				//double xNew = currWeight + ((rand() / (double)RAND_MAX) * 2 - 1);
-				//double LNew = function(xNew);
-				double newWeight = currWeight + itemList.cargo[grabItemIndex(itemList)].weight;
-				double valNew = function(newWeight);
-
-				if (valNew < val || (rand() / (double)RAND_MAX) <= pow(3, -(valNew - val) / currT))
-				{
-					val = valNew;
-					currWeight = newWeight;
-				}
-			}
+			index = randIndex(listItems);
+			if (insertCheck(listItems, inCargo, currWeight, currUtility, maxWeight, index))
+				acceptedChanges++;
+			else
+				if (comparison())
+					acceptedChanges++;
+			attempt++;
 		}
 	}
-
-	cout << "Final state = " << currWeight << "\t, total of F(x) = " << function(currWeight) << "\n\n";
-
-	return currWeight;
-}
-
-
-
-double grabItemIndex(List& itemList)
-{
-	Item indexItem;
-	srand(time(0));
-	size_t randomIndex = rand() % itemList.cargo.size();
-	indexItem = itemList.cargo[randomIndex];
-	if (indexItem.check = 1)
-		return grabItemIndex(itemList);
-	else
-	{
-		itemList.cargo[randomIndex].check = 1;
-
-	}
-	return indexItem.weight;
+	cout << currWeight << "\t" << currUtility << endl;
 }

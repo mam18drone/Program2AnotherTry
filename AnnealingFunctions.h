@@ -2,6 +2,8 @@
 #include <iostream>
 #include <ctime>
 #include "CargoItems.h"
+#include <random>
+#include <cstdlib>
 
 using namespace std;
 
@@ -14,13 +16,13 @@ double functionRand(double x, double weight)
 
 int randIndex(List& listItems)
 {
-	srand(time(0));
 	int randomIndex = rand() % listItems.cargo.size();
 	return randomIndex;
 }
 
-bool indexCheck(List& listItems, int index)
+bool indexCheck(List& listItems,int& index)
 {
+	index = randIndex(listItems);
 	Item indexItem = listItems.cargo[index];
 	if (indexItem.check == 0)
 	{
@@ -31,6 +33,38 @@ bool indexCheck(List& listItems, int index)
 		return false;
 }
 
+bool probabilityStep(double deltE, double currT)
+{
+	double prob = exp(-deltE / currT);
+	if (prob > 0.50)
+		return true;
+	else
+		return false;
+}
+
+double randChange(List& listItems)
+{
+	
+	return 0;
+}
+
+void cargoRandom(List& listItems, List& inCargo, int count, double& currWeight, double& currUtility)
+{
+	int index;
+	int i = 0;
+	while (i < count)
+	{
+		if (indexCheck(listItems,index))
+		{
+			currWeight = currWeight + listItems.cargo[index].weight;
+			currUtility = currUtility + listItems.cargo[index].priority;
+			inCargo.cargo.push_back(listItems.cargo[index]);
+			i++;
+		}
+	}
+}
+
+/*
 void shuffle(List& listItems)
 {
 	List copy;
@@ -43,12 +77,4 @@ void shuffle(List& listItems)
 	}
 	listItems = copy;
 }
-
-bool probabilityStep(double deltE, double currT)
-{
-	double prob = exp(-deltE / currT);
-	if (prob > 0.50)
-		return true;
-	else
-		return false;
-}
+*/
